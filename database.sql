@@ -357,7 +357,7 @@ CREATE TABLE donor_sponsors (
         FOREIGN KEY (id_document_type)
         REFERENCES document_types(id_document_type)
         ON DELETE RESTRIC
-
+);
 
 -- Tbala de donaciones 
 CREATE TABLE donations (
@@ -513,3 +513,85 @@ CREATE TABLE services (
         REFERENCES service_types(id_service_type)
         ON DELETE RESTRICT
 );
+
+-- Tabla de personas temporales
+CREATE TABLE temp_persons (
+    id_temp_person SERIAL, -- Identificador único de la persona temporal
+    person_type VARCHAR(30), -- Tipo de persona (ej. jugador, entrenador)
+    name VARCHAR(100), -- Nombre completo
+    id_document_type INT, -- Tipo de documento (FK)
+    identification VARCHAR(15), -- Número de identificación
+    age INT, -- Edad de la persona
+    phone_number VARCHAR(20), -- Número telefónico
+    birth_date DATE, -- Fecha de nacimiento
+    id_sport_category INT, -- Categoría deportiva (FK)
+    CONSTRAINT PK_temp_persons_id_temp_person PRIMARY KEY (id_temp_person),
+    CONSTRAINT FK_temp_persons_id_document_type FOREIGN KEY (id_document_type) REFERENCES document_types(id_document_type),
+    CONSTRAINT FK_temp_persons_id_sport_category FOREIGN KEY (id_sport_category) REFERENCES sport_categories(id_sport_category)
+);
+
+-- Tabla de inscripciones a servicios
+
+CREATE TABLE service_registrations (
+    id_service_registration SERIAL, -- Identificador único de la inscripción
+    id_person INT, -- Identificador de la persona (FK)
+    id_temp_person INT, -- Identificador de la persona temporal (FK)
+    id_service INT, -- Identificador del servicio (FK)
+    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Fecha de inscripción
+    registration_status VARCHAR(50), -- Estado de la inscripción
+    CONSTRAINT PK_service_registrations_id_service_registration PRIMARY KEY (id_service_registration),
+    CONSTRAINT UNQ_service_registrations_id_person UNIQUE (id_person),
+    CONSTRAINT UNQ_service_registrations_id_service UNIQUE (id_service),
+    CONSTRAINT FK_service_registrations_id_person FOREIGN KEY (id_person) REFERENCES persons(id_person),
+    CONSTRAINT FK_service_registrations_id_temp_person FOREIGN KEY (id_temp_person) REFERENCES temp_persons(id_temp_person),
+    CONSTRAINT FK_service_registrations_id_service FOREIGN KEY (id_service) REFERENCES services(id_service)
+);
+
+-- Tabla que relaciona patrocinadores/donantes con los servicios
+CREATE TABLE sponsors_services (
+    id_sponsor_service SERIAL, -- Identificador único del patrocinio
+    id_service INT, -- Identificador del servicio (FK)
+    id_donor_sponsor INT, -- Identificador del donante o patrocinador (FK)
+    sponsorship_description VARCHAR, -- Descripción del patrocinio
+    CONSTRAINT PK_sponsors_services_id_sponsor_service PRIMARY KEY (id_sponsor_service),
+    CONSTRAINT FK_sponsors_services_id_service FOREIGN KEY (id_service) REFERENCES services(id_service),
+    CONSTRAINT FK_sponsors_services_id_donor_sponsor FOREIGN KEY (id_donor_sponsor) REFERENCES donors_sponsors(id_donor_sponsor)
+);
+
+-- Tabla de equipos
+
+CREATE TABLE teams (
+    id_team SERIAL, -- Identificador único del equipo
+    team_name VARCHAR(100), -- Nombre del equipo
+    id_sport_category INT, -- Categoría deportiva (FK)
+    CONSTRAINT PK_teams_id_team PRIMARY KEY (id_team),
+    CONSTRAINT FK_teams_id_sport_category FOREIGN KEY (id_sport_category) REFERENCES sport_categories(id_sport_category)
+);
+
+
+-- Tabla de miembros de equipo
+
+CREATE TABLE team_members (
+    id_team_member SERIAL, -- Identificador único del miembro del equipo
+    id_team INT, -- Identificador del equipo (FK)
+    id_person INT, -- Identificador de la persona (FK)
+    id_temp_person INT, -- Identificador de la persona temporal (FK)
+    role_in_team VARCHAR(50), -- Rol del miembro en el equipo
+    CONSTRAINT PK_team_members_id_team_member PRIMARY KEY (id_team_member),
+    CONSTRAINT FK_team_members_id_team FOREIGN KEY (id_team) REFERENCES teams(id_team),
+    CONSTRAINT FK_team_members_id_person FOREIGN KEY (id_person) REFERENCES persons(id_person),
+    CONSTRAINT FK_team_members_id_temp_person FOREIGN KEY (id_temp_person) REFERENCES temp_persons(id_temp_person)
+);
+
+-- Tabla de inscripción de equipos
+CREATE TABLE team_registrations (
+    id_team_registration SERIAL, -- Identificador único de la inscripción de equipo
+    id_team INT, -- Identificador del equipo (FK)
+    id_service INT, -- Identificador del servicio (FK)
+    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Fecha de inscripción
+    registration_status VARCHAR(50), -- Estado de la inscripción
+    CONSTRAINT PK_team_registrations_id_team_registration PRIMARY KEY (id_team_registration),
+    CONSTRAINT FK_team_registrations_id_team FOREIGN KEY (id_team) REFERENCES teams(id_team),
+    CONSTRAINT FK_team_registrations_id_service FOREIGN KEY (id_service) REFERENCES services(id_service)
+);
+
